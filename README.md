@@ -1,4 +1,4 @@
-# AS-WebRTC-Camera-Manager
+# CamWebRtc
 
 AS-WebRTC-Camera-Manager é um servidor de gerenciamento de câmeras em tempo real utilizando o protocolo WebRTC. O sistema foi projetado para fornecer uma solução escalável, segura e de fácil utilização para visualizar e gerenciar câmeras IP diretamente do navegador. Além disso, o servidor conta com um sistema de autenticação e gerenciamento de usuários para garantir que o acesso aos feeds de vídeo seja controlado de forma eficaz.
 
