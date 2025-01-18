@@ -1,0 +1,6 @@
+@CamWebRtc_HostAddress = http://localhost:5274
+
+GET {{CamWebRtc_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
