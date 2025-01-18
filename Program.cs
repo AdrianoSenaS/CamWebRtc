@@ -3,11 +3,14 @@ using CamWebRtc.Application.Interfaces;
 using CamWebRtc.Application.Services;
 using CamWebRtc.Infrastructure.Config;
 using CamWebRtc.Infrastructure.Data;
+using CamWebRtc.Server.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+//Adicionando SignalR
+builder.Services.AddSignalR();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 //Adicionando a configuração personalizada do Swagger
@@ -42,5 +45,7 @@ app.UseAuthorization();
 app.MapControllers();
 //Usando do Cros personalizado
 app.UseCors("AllowAll");
+//adiconando webrtc signaling
+app.MapHub<WebRTCSignalingHub>("/webrtc-signaling");
 //Iniciando aplicação
 app.Run();
