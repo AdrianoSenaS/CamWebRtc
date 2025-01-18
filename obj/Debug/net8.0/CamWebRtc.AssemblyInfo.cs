@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CamWebRtc")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+29266278185753814ef03bc4ee04bde286646648")]
 [assembly: System.Reflection.AssemblyProductAttribute("CamWebRtc")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CamWebRtc")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -35,7 +35,7 @@ if (app.Environment.IsDevelopment())
 var scope = app.Services.CreateScope();
 scope.ServiceProvider.AppMigrations();
 //Usando redirecionamento Https
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 //Usando Autorização
 app.UseAuthorization();
 //Adicionando Controladores
