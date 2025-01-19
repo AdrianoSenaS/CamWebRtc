@@ -17,7 +17,8 @@ namespace CamWebRtc.API.Configuration
             {
                 options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.AllowAnyOrigin()
+                    policy.WithOrigins("http://127.0.0.1:5500") // O domínio do seu cliente
+                    .AllowCredentials() // Permitir o envio de credenciais (cookies, autenticação)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
                 });
