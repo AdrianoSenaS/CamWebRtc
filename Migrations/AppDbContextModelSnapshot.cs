@@ -36,6 +36,21 @@ namespace CamWebRtc.Migrations
                     b.ToTable("Cams", (string)null);
                 });
 
+            modelBuilder.Entity("CamWebRtc.API.Models.StreamModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("urlStream")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Stream", (string)null);
+                });
+
             modelBuilder.Entity("CamWebRtc.API.Models.UserModel", b =>
                 {
                     b.Property<int>("Id")

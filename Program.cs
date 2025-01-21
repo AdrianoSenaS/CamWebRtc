@@ -1,9 +1,10 @@
+using CamWebRtc;
 using CamWebRtc.API.Configuration;
+using CamWebRtc.Application;
 using CamWebRtc.Application.Interfaces;
 using CamWebRtc.Application.Services;
 using CamWebRtc.Infrastructure.Config;
 using CamWebRtc.Infrastructure.Data;
-using Microsoft.AspNetCore.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,30 +23,37 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ICamRepository, CamRepository>();
 builder.Services.AddScoped<CamService>();
-builder.Services.AddWebSockets(options =>
-{
-    options.KeepAliveInterval = TimeSpan.FromSeconds(120);
-});
-
+builder.Services.AddScoped<IStreamRepository, StreamRepository>();
+builder.Services.AddScoped<StreamServices>();
+var nodeService = new NodeJsService();
+var nodeScriptPath = "wwwroot/Server.js"; // Caminho do arquivo server.js
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     //Adicionando configuração personalizado do SwaggerUi
     app.UseSwaggerConfiguration();
 }
+app.UseCors("AllowAll");
 //Adicionando Migrations
 var scope = app.Services.CreateScope();
 scope.ServiceProvider.AppMigrations();
-//Usando redirecionamento Https
-//app.UseHttpsRedirection();
-//Usando Autorização
-app.UseAuthorization();
+// Servir arquivos estáticos do diretório Frontend
 //Adicionando Controladores
 app.MapControllers();
-//Usando do Cros personalizado
-app.UseCors("AllowAll");
+app.UseAuthorization();
+app.UseStaticFiles();
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    nodeService.StartNodeServer(nodeScriptPath);
+});
+
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    nodeService.StopNodeServer();
+});
+app.MapGet("/", () => "ASP.NET + Node.js Integration!");
 app.UseRouting();
+app.MapControllers();
 //Iniciando aplicação
-app.Run("https://*80");
+app.Run();

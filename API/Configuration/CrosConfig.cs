@@ -16,12 +16,10 @@ namespace CamWebRtc.API.Configuration
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll", policy =>
-                {
-                    policy.WithOrigins("http://127.0.0.1:5500") // O domínio do seu cliente
-                    .AllowCredentials() // Permitir o envio de credenciais (cookies, autenticação)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-                });
+                    policy.AllowAnyOrigin()   // Permite qualquer origem
+                    .AllowAnyHeader()   // Permite qualquer cabeçalho
+                    .AllowAnyMethod()
+                );  // Permite qualquer método
             });
         }
     }
