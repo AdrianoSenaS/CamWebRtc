@@ -67,7 +67,7 @@ async function startStreaming(clientId, deviceId) {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
 
-        // Certifique-se de que o cliente ainda está conectado antes de emitir a oferta
+        // Verificar se o cliente ainda está conectado antes de emitir a oferta
         if (socket.connected) {
             socket.emit('offer', { to: clientId, offer });
         } else {
