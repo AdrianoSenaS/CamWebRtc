@@ -331,10 +331,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Infrastructure\Database\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="wwwroot\node_modules\%40eslint-community\eslint-utils\index.js" />
     <None Include="wwwroot\node_modules\%40eslint-community\eslint-utils\index.js.map" />
     <None Include="wwwroot\node_modules\%40eslint-community\eslint-utils\index.mjs" />

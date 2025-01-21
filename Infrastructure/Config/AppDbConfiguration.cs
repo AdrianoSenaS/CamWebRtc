@@ -9,7 +9,7 @@ namespace CamWebRtc.Infrastructure.Config
         {
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlite("Data Source=Infrastructure/Database/Database.db");
+                options.UseSqlite("Data Source=Database.db");
             });
         }
         public static void AppMigrations(this IServiceProvider scope)
