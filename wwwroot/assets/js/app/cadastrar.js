@@ -1,8 +1,7 @@
-const ListarCameras = document.getElementById("ListarCameras");
+const url = "https://node-media-server-api-web-webrtc.fpumgv.easypanel.host/api/cam";
+let ListarCameras = document.getElementById("ListarCameras");
 const videoPlayer = document.getElementById("videoPlayer");
 const addPlayerBtn = document.getElementById("btnCadastrar");
-let camerName;
-const url = "/api/Cam";
 
 // Listar dispositivos de mídia
 const listVideoDevices = async () => {
@@ -14,14 +13,14 @@ const listVideoDevices = async () => {
     ListarCameras.innerHTML = '<option>Selecione</option>';
 
     // Adicionar dispositivos ao select
-    videoDevices.forEach((device, index) => {
+    videoDevices.forEach((device) => {
         const option = document.createElement('option');
-        option.value = device.deviceId;
-        option.text = device.label || `Camera ${index + 1}`;
+        option.value = device.deviceId;;
+        option.text = device.label;
         ListarCameras.appendChild(option);
     });
 };
-
+//Adiciona o stream local
 const playrLocal = (deviceId) => {
     const constraints = {
         video: {
@@ -34,7 +33,7 @@ const playrLocal = (deviceId) => {
     });
 };
 
-// Criar player de vídeo para o dispositivo selecionado
+//Envia os dados para api
 async function createVideoPlayer(deviceId, deviceName) {
     const constraints = {
         video: {
@@ -43,8 +42,6 @@ async function createVideoPlayer(deviceId, deviceName) {
     };
     try {
         navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-            window.stream = stream;
-            videoPlayer.srcObject = stream; 
             const data = {
                 "name": deviceName,
                 "isActive": stream.active,
@@ -60,7 +57,7 @@ async function createVideoPlayer(deviceId, deviceName) {
         console.error('Erro ao acessar o dispositivo de vídeo:', error);
     }
 }
-
+//Evento Selecionando camera
 ListarCameras.addEventListener("change", (e) => {
     const selectedDeviceId = ListarCameras.value;
     console.log(selectedDeviceId);
@@ -78,8 +75,9 @@ addPlayerBtn.addEventListener('click', () => {
     }
 });
 
+//Ao chamar api
 const api = (url, method, data) => {
-    // Opções da requisição
+    //Opções da requisição
     const options = {
         method: method, // Método HTTP
         headers: {
@@ -88,15 +86,15 @@ const api = (url, method, data) => {
         body: JSON.stringify(data) // Converte os dados para JSON
     };
 
-    // Fazendo a requisição
+    //Fazendo a requisição
     fetch(url, options)
         .then(response => {
             console.log(response);
             if (!response.ok) {
-                throw new Error(`Erro: ${response.status}`);
+                throw new Error(`Erro: ${response.status}`);//Erro na solicitação 
             }
             alert("Camera Cadastrada");
-            return response.json(); // Converte a resposta para JSON
+            return response.json(); //Converte a resposta para JSON
         })
         .then(result => {
             console.log("Resposta do servidor:", result);
@@ -106,5 +104,5 @@ const api = (url, method, data) => {
         });
 };
 
-// Inicializar a lista de dispositivos ao carregar a página
+//Inicializar a lista de dispositivos ao carregar a página
 listVideoDevices();

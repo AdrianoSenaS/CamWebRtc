@@ -5,7 +5,7 @@ https://go.microsoft.com/fwlink/?LinkID=208121.
 <Project>
   <PropertyGroup>
     <_PublishTargetUrl>E:\Projetos\CamWebRtc\CamWebRtc\bin\Release\net8.0\publish\</_PublishTargetUrl>
-    <History>True|2025-01-21T01:26:27.1510684Z||;True|2025-01-20T22:18:43.9619915-03:00||;</History>
+    <History>True|2025-01-21T02:26:16.6384217Z||;True|2025-01-20T22:26:27.1510684-03:00||;True|2025-01-20T22:18:43.9619915-03:00||;</History>
     <LastFailureDetails />
   </PropertyGroup>
 </Project>
