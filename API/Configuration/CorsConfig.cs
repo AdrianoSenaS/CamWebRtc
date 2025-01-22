@@ -6,7 +6,7 @@ namespace CamWebRtc.API.Configuration
     /// Essa configuração usa Origin para todos
     /// OBS: Se for usar em produção recomendo usar Origin para domínios
     /// </summary>
-    public static class CrosConfig
+    public static class CorsConfig
     {
         /// <summary>
         /// Função de configuração Cors

@@ -39,7 +39,6 @@ app.UseCors("AllowAll");
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(frontendPath),
-    RequestPath = "/index.html"
 });
 //Criando Scope
 var scope = app.Services.CreateScope();
