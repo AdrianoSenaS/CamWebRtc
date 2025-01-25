@@ -1,3 +1,7 @@
 ﻿#Arquivos para ser ignorados
 bin
 obj
+appsettings.json
+Database.db
+Database.db-shm
+Database.db-wal
