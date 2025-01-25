@@ -12,12 +12,12 @@ namespace CamWebRtc.API.Controllers
     [Authorize]
     public class CamController : ControllerBase
     {
-         private readonly CamService _camService;
+        private readonly CamService _camService;
         public CamController(CamService camService)
         {
             _camService = camService;
         }
-        
+
         // GET: api/<CamController>
         [HttpGet]
         public List<CamModel> Get()

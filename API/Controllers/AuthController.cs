@@ -11,14 +11,14 @@ namespace CamWebRtc.API.Controllers
     [AllowAnonymous]
     public class AuthController : ControllerBase
     {
-        private readonly JwtService _jwtService;
-        public AuthController(JwtService jwtService) 
+        private readonly IJwtService _jwtService;
+        public AuthController(IJwtService jwtService)
         {
             _jwtService = jwtService;
         }
         // POST api/<AuthController>
         [HttpPost("login")]
-        public IActionResult Login( LoginModel login)
+        public IActionResult Login(LoginModel login)
         {
             if (login.Username == "admin" && login.Password == "senha123")
             {

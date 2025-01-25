@@ -27,7 +27,7 @@ namespace CamWebRtc.API.Configuration
         {
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc(SwaggerVersion, new OpenApiInfo 
+                options.SwaggerDoc(SwaggerVersion, new OpenApiInfo
                 {
                     Title = SwaggerTitle,
                     Version = SwaggerVersion,
@@ -52,20 +52,20 @@ namespace CamWebRtc.API.Configuration
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
-                       
+
                         new OpenApiSecurityScheme
                         {
-                            
+
                             Reference = new OpenApiReference
                             {
                             Type = ReferenceType.SecurityScheme,
                             Id = "Bearer"
                             }
                         },
-                        
+
                         Array.Empty<string>()
                     }
-                    
+
                 });
 
             });
