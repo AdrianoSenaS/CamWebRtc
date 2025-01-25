@@ -38,6 +38,36 @@ namespace CamWebRtc.API.Configuration
                         Name = SwaggerName,
                     }
                 });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Autorização",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Insira o token JWT",
+
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                       
+                        new OpenApiSecurityScheme
+                        {
+                            
+                            Reference = new OpenApiReference
+                            {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                            }
+                        },
+                        
+                        Array.Empty<string>()
+                    }
+                    
+                });
+
             });
         }
 
@@ -51,6 +81,8 @@ namespace CamWebRtc.API.Configuration
             {
                 options.SwaggerEndpoint(SwaggerEndPoint, $"{SwaggerTitle} {SwaggerVersion}");
                 options.RoutePrefix = SwaggerPrefix;
+
+
             });
         }
     }

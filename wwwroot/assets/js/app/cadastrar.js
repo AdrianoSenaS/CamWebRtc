@@ -1,4 +1,4 @@
-const url = "https://node-media-server-api-web-webrtc.fpumgv.easypanel.host/api/cam";
+const url = "/api/cam";
 let ListarCameras = document.getElementById("ListarCameras");
 const videoPlayer = document.getElementById("videoPlayer");
 const addPlayerBtn = document.getElementById("btnCadastrar");
@@ -48,7 +48,13 @@ async function createVideoPlayer(deviceId, deviceName) {
                 "connectionID": deviceId
             };
             if (deviceName != null) {
-                api(url, "POST", data);
+                const token = Cookies()
+                console.log(token)
+                try{
+                    Api(url, "POST", data, token);
+                }catch(ex){
+                    console.log(ex)
+                }
             } else {
                 alert("Selecione uma camera");
             }
@@ -74,35 +80,6 @@ addPlayerBtn.addEventListener('click', () => {
         alert('Por favor, selecione uma câmera primeiro.');
     }
 });
-
-//Ao chamar api
-const api = (url, method, data) => {
-    //Opções da requisição
-    const options = {
-        method: method, // Método HTTP
-        headers: {
-            "Content-Type": "application/json" // Tipo de dado enviado
-        },
-        body: JSON.stringify(data) // Converte os dados para JSON
-    };
-
-    //Fazendo a requisição
-    fetch(url, options)
-        .then(response => {
-            console.log(response);
-            if (!response.ok) {
-                throw new Error(`Erro: ${response.status}`);//Erro na solicitação 
-            }
-            alert("Camera Cadastrada");
-            return response.json(); //Converte a resposta para JSON
-        })
-        .then(result => {
-            console.log("Resposta do servidor:", result);
-        })
-        .catch(error => {
-            console.error("Erro ao fazer a requisição:", error);
-        });
-};
 
 //Inicializar a lista de dispositivos ao carregar a página
 listVideoDevices();

@@ -1,5 +1,6 @@
 ﻿using CamWebRtc.API.Models;
 using CamWebRtc.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -8,6 +9,7 @@ namespace CamWebRtc.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CamController : ControllerBase
     {
          private readonly CamService _camService;

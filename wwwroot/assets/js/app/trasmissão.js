@@ -1,15 +1,42 @@
+const url = "/api/IceServes";
 const addPlayerBtn = document.getElementById("btnTransmissao")
 const videoPlayer = document.getElementById("PlayerWeb")
 const selecionarcameras = document.getElementById("selecionarcameras")
 const socket = io('https://node-media-server-servernode.fpumgv.easypanel.host');
 let peerConnections = {};
+const token = Cookies()
+let username;
+let credential;
+let urlStun = []
+let urlTurn = []
 
 //Configurar servidor TURN, para funcionar onde o firewall do roteador ou provedores bloqueiam conexões diretas
-const configuration = {
-    iceServers: [
-        { urls: "stun:stun.l.google.com:19302" }//usando iceServers do google
-    ]
-};
+const IceServesConfiguration = async () => {
+    const response = await ApiGet(url, "GET", token);
+    response.forEach(e => {
+        credential = e.credential
+        username = e.username
+        e.urlsStun.forEach(i => {
+            urlStun.push(i.urls)
+        })
+        e.urlsTurn.forEach(a => {
+            urlTurn.push(a.urls)
+        })
+    })
+    const configuration = {
+        iceServers: [
+            {
+                urls: urlStun
+            },
+            {
+                username: username,
+                credential: credential,
+                urls: urlTurn
+            }]
+    };
+
+    return configuration;
+}
 
 //Captura e ativa a webcam
 navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -30,8 +57,8 @@ async function startStreaming(clientId, deviceID) {
     window.stream = stream;
     videoPlayer.srcObject = stream;
     console.log(deviceID)
+    const configuration = IceServesConfiguration();
     const peerConnection = new RTCPeerConnection(configuration);
-
 
     stream.getTracks().forEach((track) => {
         peerConnection.addTrack(track, stream);
@@ -58,7 +85,7 @@ async function startStreaming(clientId, deviceID) {
     //Armazene a conexão
     peerConnections[clientId] = peerConnection;
 
-    
+
 }
 
 //Ao receber uma nova solicitação de câmera
@@ -80,7 +107,7 @@ socket.on('new-client', async ({ clientId, cameraId }) => {
             });
         })
         .catch(error => console.error("Erro ao listar dispositivos:", error));
-   
+
 });
 
 //Adiciona respostas do cliente ao transmissor
@@ -95,7 +122,6 @@ socket.on('ice-candidate', ({ from, candidate }) => {
     console.log("ice-candidate " + from + " " + candidate)
     peerConnections[from]?.addIceCandidate(new RTCIceCandidate(candidate));
 });
-
 
 
 
