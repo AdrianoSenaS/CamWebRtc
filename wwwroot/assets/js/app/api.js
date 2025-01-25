@@ -9,16 +9,17 @@ const Api = async (url, method, data, token)=>{
         },
         body: JSON.stringify(data) 
     };
-   try{
-    const response = (await fetch(url, options)).statusText
-    if(response != "Unauthorized" && response != "Forbidden"){
+    try {
+        const response = (await fetch(url, options)).status
+        if(response != "401" && response != "403") {
+           console.log(response)
         const json = (await fetch(url, options)).json()
         return json;
     }else{
         window.location.href ="/login.html"
     }
-   }catch(ex){
-    return ex;
+    } catch (ex) {
+        return ex
    }
 }
 
@@ -31,15 +32,16 @@ const ApiGet = async (url, method, token)=>{
         },
     };
    try{
-    const response = (await fetch(url, options)).statusText
-    if(response != "Unauthorized" && response != "Forbidden"){
+       const response = (await fetch(url, options)).status
+       console.log(response)
+       if (response != "401" && response != "403"){
         const json = (await fetch(url, options)).json()
         return json;
     }else{
         window.location.href ="/login.html"
     }
     
-   }catch(ex){
-    return ex;
+   } catch (ex) {
+       return ex
    }
 }
