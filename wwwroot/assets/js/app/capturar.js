@@ -1,89 +1,135 @@
 const url = "/api/cam";
-const socket = io('https://node-media-server-servernode.fpumgv.easypanel.host');
-const ListarCameras = document.getElementById("ListarCameras")
-const videoPlayer = document.getElementById("videolocal")
-const addPlayerBtn = document.getElementById("btnCapturar")
+const urlIce = "/api/IceServes";
+const signalRHubUrl = '/signaling'; // Ajuste para o endpoint do SignalR
+const ListarCameras = document.getElementById("ListarCameras");
+const videoPlayer = document.getElementById("videolocal");
+const addPlayerBtn = document.getElementById("btnCapturar");
 let peerConnection;
-const token = Cookies()
+const token = Cookies();
+let username;
+let credential;
+let urlStun = [];
+let urlTurn = [];
+// Configurar servidor TURN para funcionar com firewalls
+const IceServesConfiguration = async () => {
+    const response = await GetApi(urlIce, "GET", token);
+    response.forEach(e => {
+        credential = e.credential;
+        username = e.username;
+        e.urlsStun.forEach(i => {
+            urlStun.push(i.urls);
+        });
+        e.urlsTurn.forEach(a => {
+            urlTurn.push(a.urls);
+        });
+    });
+    const configuration = {
+        iceServers: [
+            { urls: urlStun },
+            { username: username, credential: credential, urls: urlTurn }
+        ]
+    };
 
-//Configurar servidor TURN, para funcionar onde o firewall do roteador ou provedores bloqueiam conexões diretas
-const configuration = {
-    iceServers: [{ urls: ["stun:sp-turn1.xirsys.com"] }, { username: "TP-V6xiLlVi-Hmh76H6U2qmrCO9hL9FPpexh6s7xjzLqBj_ssdSVFWTsMWiIxhe9AAAAAGeRNxZhZHJpYW5vc2VuYQ==", credential: "a78c2292-d8ed-11ef-8f2a-0242ac120004", urls: ["turn:sp-turn1.xirsys.com:80?transport=udp", "turn:sp-turn1.xirsys.com:3478?transport=udp", "turn:sp-turn1.xirsys.com:80?transport=tcp", "turn:sp-turn1.xirsys.com:3478?transport=tcp", "turns:sp-turn1.xirsys.com:443?transport=tcp", "turns:sp-turn1.xirsys.com:5349?transport=tcp"] }]
+    return configuration;
 };
-//buscando cameras na api e adicionando no html
-ApiGet(url, "GET",  token).then(cameras => {
-    ListarCameras.innerHTML = '<option>Selecione uma camera</option>';
-    cameras.map(camera => {
-        const option = document.createElement('option')
-        option.value = camera.name;
-        option.text = camera.name
-        ListarCameras.appendChild(option)
-    })
-})
 
-//Ao receber uma oferta do transmissor
-socket.on('offer', async ({ from, offer }) => {
-     peerConnection = new RTCPeerConnection(configuration);
-     //Ao receber o stream de video
+
+// Conectar ao SignalR Hub
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl(signalRHubUrl, { accessTokenFactory: () => token }) // Adiciona o token de autenticação
+    .withAutomaticReconnect() // Reconecta automaticamente se cair
+    .build();
+
+// Iniciar a conexão com o SignalR
+connection.start()
+    .then(() => console.log("Conectado ao SignalR Hub"))
+    .catch(err => console.error("Erro ao conectar ao SignalR:", err));
+
+// Buscar câmeras na API e adicionar no HTML
+GetApi(url, "GET", token).then(cameras => {
+    ListarCameras.innerHTML = '<option>Selecione uma câmera</option>';
+    cameras.map(camera => {
+        const option = document.createElement('option');
+        option.value = camera.name;
+        option.text = camera.name;
+        ListarCameras.appendChild(option);
+    });
+});
+
+// Ao receber uma oferta do transmissor
+connection.on('ReceiveOffer', async ({ from, offer }) => {
+    const offerParse = JSON.parse(offer)
+    console.log(offerParse)
+    const configuration = IceServesConfiguration();
+    peerConnection = new RTCPeerConnection(configuration);
+
+    // Ao receber o stream de vídeo
     peerConnection.ontrack = (event) => {
         const track = event.track;
-        ///verifica se o stream é um video
         if (track.kind === 'video') {
             const mediaStream = event.streams[0];
-            console.log(mediaStream)
+            console.log(mediaStream);
             videoPlayer.srcObject = mediaStream;
             videoPlayer.play().catch((error) => {
                 console.error('Erro ao tentar reproduzir o vídeo:', error);
             });
         }
     };
-    //Ao receber ice-candidate
+
+    // Ao receber um candidato ICE
     peerConnection.onicecandidate = (event) => {
+
         if (event.candidate) {
-            socket.emit('ice-candidate', { to: from, candidate: event.candidate });
+            const cadidateJson = JSON.stringify(event.candidate)
+            connection.invoke('SendIceCandidate', from, cadidateJson);
+            console.log("SendIceCandidateClientId :" + from)
+            console.log("SendIceCandidate :" + cadidateJson)
         }
     };
-    //Adicionando uma oferta para o transmissor
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+    // Adicionar a oferta recebida
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offerParse));
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
-    //Enviando oferta para o transmissor
-    socket.emit('answer', { to: from, answer: peerConnection.localDescription });
-    console.log(from)
+    const answerJson = JSON.stringify(peerConnection.localDescription)
+    // Enviar a resposta para o transmissor
+    connection.invoke('SendAnswer', from, answerJson);
+    console.log("SendAnswer" + answerJson);
 });
 
-//Adicionar candidatos ICE recebidos
-socket.on('ice-candidate', ({ candidate }) => {
-    if (peerConnection && candidate) {
+// Adicionar candidatos ICE recebidos
+connection.on('ReceiveIceCandidate', ({ candidate }) => {
+    const cadidatejson = JSON.parse(candidate)
+    if (peerConnection && cadidatejson) {
         peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
     }
 });
 
-//Ao clicar no botão capturar
+// Ao clicar no botão "Capturar"
 addPlayerBtn.addEventListener("click", () => {
-    if (ListarCameras.value !== "Selecione uma camera") {
-        const cameraId = ListarCameras.value
-        socket.emit('request-camera', { cameraId });
-        console.log(`Solicitação enviada para câmera: ${cameraId}`);
+    if (ListarCameras.value !== "Selecione uma câmera") {
+        const cameraId = ListarCameras.value;
+        connection.invoke('RequestCamera', cameraId)
+            .then(() => console.log(`Solicitação enviada para câmera: ${cameraId}`))
+            .catch(err => console.error('Erro ao solicitar câmera:', err));
     } else {
-        alert("Selecione uma camera para caputrar uma camera")
+        alert("Selecione uma câmera para capturar");
     }
-})
+});
 
-
-const APIGET = async (url, method, token)=>{
+// Função para buscar dados da API
+const ApiGet = async (url, method, token) => {
     const options = {
         method: method,
         headers: {
             "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json" 
+            "Content-Type": "application/json"
         },
     };
-   try{
-    const response = (await fetch(url, options)).statusText
-    console.log(response)
-   }catch(ex){
-    return ex;
-   }
-}
-APIGET(url, "GET", token)
+    try {
+        const response = await fetch(url, options);
+        return await response.json();
+    } catch (ex) {
+        console.error('Erro ao buscar dados:', ex);
+    }
+};

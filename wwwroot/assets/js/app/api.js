@@ -23,7 +23,7 @@ const Api = async (url, method, data, token)=>{
    }
 }
 
-const ApiGet = async (url, method, token)=>{
+const GetApi = async (url, method, token)=>{
     const options = {
         method: method,
         headers: {

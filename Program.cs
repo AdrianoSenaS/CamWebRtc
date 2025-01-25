@@ -11,7 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Adicionando serviços ao container
 builder.Services.AddControllers();
-
+// Adicione os serviços necessários
+builder.Services.AddSignalR();
 // Configurar autenticação JWT
 builder.Services.AddJwtConfiguration(builder);
 // Configuração personalizada do Swagger
@@ -37,7 +38,7 @@ builder.Services.AddScoped<IceServersService>();
 builder.Services.AddAuthorization();
 
 // Adicionando JWT Service
-builder.Services.AddScoped<IJwtService>();
+builder.Services.AddScoped<JwtService>();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -51,12 +52,6 @@ app.UseSwaggerConfiguration();
 
 // Configuração de CORS
 app.UseCors("AllowAll");
-
-// Configuração de arquivos estáticos
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(frontendPath),
-});
 
 // Middleware de roteamento
 app.UseRouting();
@@ -72,6 +67,14 @@ using (var scope = app.Services.CreateScope())
 }
 // Adicionando controladores
 app.MapControllers();
-
+// Configuração de arquivos estáticos
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(frontendPath),
+});
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapHub<SignalingHub>("/signaling");
+});
 // Iniciando a aplicação
 app.Run();

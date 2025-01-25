@@ -3,11 +3,11 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-public class IJwtService
+public class JwtService
 {
     private readonly IConfiguration _configuration;
 
-    public IJwtService(IConfiguration configuration)
+    public JwtService(IConfiguration configuration)
     {
         _configuration = configuration;
     }

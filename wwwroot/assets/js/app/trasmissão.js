@@ -1,62 +1,58 @@
 const url = "/api/IceServes";
-const addPlayerBtn = document.getElementById("btnTransmissao")
-const videoPlayer = document.getElementById("PlayerWeb")
-const selecionarcameras = document.getElementById("selecionarcameras")
-const socket = io('https://node-media-server-servernode.fpumgv.easypanel.host');
+const addPlayerBtn = document.getElementById("btnTransmissao");
+const videoPlayer = document.getElementById("PlayerWeb");
+const selecionarcameras = document.getElementById("selecionarcameras");
 let peerConnections = {};
-const token = Cookies()
+const token = Cookies();
 let username;
 let credential;
-let urlStun = []
-let urlTurn = []
+let urlStun = [];
+let urlTurn = [];
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl("/signaling") // URL do servidor SignalR
+    .build();
 
-//Configurar servidor TURN, para funcionar onde o firewall do roteador ou provedores bloqueiam conexões diretas
+
+// Configurar servidor TURN para funcionar com firewalls
 const IceServesConfiguration = async () => {
-    const response = await ApiGet(url, "GET", token);
+    const response = await GetApi(url, "GET", token);
     response.forEach(e => {
-        credential = e.credential
-        username = e.username
+        credential = e.credential;
+        username = e.username;
         e.urlsStun.forEach(i => {
-            urlStun.push(i.urls)
-        })
+            urlStun.push(i.urls);
+        });
         e.urlsTurn.forEach(a => {
-            urlTurn.push(a.urls)
-        })
-    })
+            urlTurn.push(a.urls);
+        });
+    });
     const configuration = {
         iceServers: [
-            {
-                urls: urlStun
-            },
-            {
-                username: username,
-                credential: credential,
-                urls: urlTurn
-            }]
+            { urls: urlStun },
+            { username: username, credential: credential, urls: urlTurn }
+        ]
     };
 
     return configuration;
-}
+};
 
-//Captura e ativa a webcam
+// Captura e ativa a webcam
 navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
-//Inicia a transmissão
+// Inicia a transmissão
 async function startStreaming(clientId, deviceID) {
-
-    //pega o id da camera 
     const constraints = {
         video: {
             deviceId: { exact: deviceID },
         },
-        audio: true
+        audio: true,
     };
 
-    //Adicionar tracks ao peerConnection
+    // Adicionar tracks ao peerConnection
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     window.stream = stream;
     videoPlayer.srcObject = stream;
-    console.log(deviceID)
+
     const configuration = IceServesConfiguration();
     const peerConnection = new RTCPeerConnection(configuration);
 
@@ -64,64 +60,73 @@ async function startStreaming(clientId, deviceID) {
         peerConnection.addTrack(track, stream);
     });
 
-    //Gerenciar candidatos ICE
+    // Gerenciar candidatos ICE
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-            socket.emit('ice-candidate', { to: clientId, candidate: event.candidate });
+
+            const cadidateJson = JSON.stringify(event.candidate)
+            connection.invoke("SendIceCandidate", clientId, cadidateJson);
+            console.log("SendIceCandidate " + cadidateJson)
         }
     };
 
-    //Criar e enviar oferta
+    // Criar e enviar oferta
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    //Verificar se o cliente ainda está conectado antes de emitir a oferta
-    if (socket.connected) {
-        socket.emit('offer', { to: clientId, offer });
-    } else {
-        console.error(`Cliente ${clientId} não está mais conectado.`);
-    }
-
-    //Armazene a conexão
+    const json = JSON.stringify(offer);
+    console.log("SendOffer ClientId " + clientId)
+    console.log("SendOffer " + json)
+    connection.invoke("SendOffer", clientId, json);
+    // Armazene a conexão
     peerConnections[clientId] = peerConnection;
-
-
 }
 
-//Ao receber uma nova solicitação de câmera
-socket.on('new-client', async ({ clientId, cameraId }) => {
-    console.log("novo cliente " + clientId)
+// Conexão ao SignalR
+connection.on("NewClient", async ({ clientId, cameraId }) => {
+    console.log("Novo cliente conectado: " + clientId);
+
     navigator.mediaDevices.enumerateDevices()
         .then(devices => {
             devices.forEach(device => {
                 if (device.kind === "videoinput") {
-
                     if (cameraId === device.label) {
                         console.log(`Câmera encontrada: ${device.label}, ID: ${device.deviceId}`);
                         startStreaming(clientId, device.deviceId);
                     } else {
-                        console.log("Camera não encontrada")
+                        console.log("Câmera não encontrada");
                     }
-
                 }
             });
         })
         .catch(error => console.error("Erro ao listar dispositivos:", error));
-
 });
 
-//Adiciona respostas do cliente ao transmissor
-socket.on('answer', ({ from, answer }) => {
-    console.log("answer " + from + " " + answer)
-
-    peerConnections[from]?.setRemoteDescription(new RTCSessionDescription(answer));
+// Adicionar respostas do cliente ao transmissor
+connection.on("Answer", ({ from, answer }) => {
+    console.log("Resposta recebida de: " + from);
+    const answerJson = JSON.parse(answer)
+    peerConnections[from]?.setRemoteDescription(new RTCSessionDescription(answerJson));
 });
 
-//Adiciona candidatos ICE do cliente
-socket.on('ice-candidate', ({ from, candidate }) => {
-    console.log("ice-candidate " + from + " " + candidate)
-    peerConnections[from]?.addIceCandidate(new RTCIceCandidate(candidate));
+// Adicionar candidatos ICE do cliente
+connection.on("IceCandidate", ({ from, candidate }) => {
+    console.log("Candidato ICE recebido de: " + from);
+    const candidateJson = JSON.parse(candidate)
+    peerConnections[from]?.addIceCandidate(new RTCIceCandidate(candidateJson));
 });
 
+// Gerenciar desconexões
+connection.on("ClientDisconnected", ({ clientId }) => {
+    console.log(`Cliente desconectado: ${clientId}`);
+    delete peerConnections[clientId];
+});
 
-
+// Inicia a conexão com o SignalR
+connection.start()
+    .then(() => {
+        console.log("Conectado ao servidor SignalR.");
+    })
+    .catch(error => {
+        console.error("Erro ao conectar ao SignalR:", error);
+    });

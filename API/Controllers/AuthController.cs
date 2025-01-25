@@ -11,8 +11,8 @@ namespace CamWebRtc.API.Controllers
     [AllowAnonymous]
     public class AuthController : ControllerBase
     {
-        private readonly IJwtService _jwtService;
-        public AuthController(IJwtService jwtService)
+        private readonly JwtService _jwtService;
+        public AuthController(JwtService jwtService)
         {
             _jwtService = jwtService;
         }
