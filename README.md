@@ -15,7 +15,7 @@ CamWebRtc é um servidor de gerenciamento de câmeras em tempo real utilizando o
 
 - **WebRTC:** Protocolo de comunicação em tempo real para transmissão de vídeo.
 - **ASP.NET Core (v8.0):** Framework para construir a API e o backend do servidor.
-- **JWT (JSON Web Tokens):** Autenticação segura para acesso aos feeds de vídeo. (em breve)
+- **JWT (JSON Web Tokens):** Autenticação segura para acesso aos feeds de vídeo.
 - **SQLite:** Banco de dados utilizado para armazenar dados de câmeras, usuários e permissões.
 - **SignalR:** Comunicação em tempo real entre o servidor e os clientes para garantir a baixa latência.
 - **Docker (opcional):** Suporte para execução do servidor em containers para ambientes de produção escaláveis.
