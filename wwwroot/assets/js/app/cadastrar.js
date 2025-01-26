@@ -52,6 +52,7 @@ async function createVideoPlayer(deviceId, deviceName) {
                 console.log(token)
                 try{
                     Api(url, "POST", data, token);
+                    alert(`Camera Cadastrada: ${deviceName}`);
                 }catch(ex){
                     console.log(ex)
                 }

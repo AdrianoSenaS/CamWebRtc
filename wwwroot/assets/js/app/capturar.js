@@ -4,15 +4,14 @@ const signalRHubUrl = '/signaling'; // Ajuste para o endpoint do SignalR
 const ListarCameras = document.getElementById("ListarCameras");
 const videoPlayer = document.getElementById("videolocal");
 const addPlayerBtn = document.getElementById("btnCapturar");
-let peerConnection;
 const token = Cookies();
 let username;
 let credential;
 let urlStun = [];
 let urlTurn = [];
-// Configurar servidor TURN para funcionar com firewalls
-const IceServesConfiguration = async () => {
-    const response = await GetApi(urlIce, "GET", token);
+
+
+GetApi(urlIce, "GET", token).then(response => {
     response.forEach(e => {
         credential = e.credential;
         username = e.username;
@@ -23,15 +22,8 @@ const IceServesConfiguration = async () => {
             urlTurn.push(a.urls);
         });
     });
-    const configuration = {
-        iceServers: [
-            { urls: urlStun },
-            { username: username, credential: credential, urls: urlTurn }
-        ]
-    };
+})
 
-    return configuration;
-};
 
 
 // Conectar ao SignalR Hub
@@ -56,55 +48,59 @@ GetApi(url, "GET", token).then(cameras => {
     });
 });
 
-// Ao receber uma oferta do transmissor
-connection.on('ReceiveOffer', async ({ from, offer }) => {
-    const offerParse = JSON.parse(offer)
-    console.log(offerParse)
-    const configuration = IceServesConfiguration();
-    peerConnection = new RTCPeerConnection(configuration);
+const StartStream = async () => {
 
-    // Ao receber o stream de vídeo
-    peerConnection.ontrack = (event) => {
-        const track = event.track;
-        if (track.kind === 'video') {
-            const mediaStream = event.streams[0];
-            console.log(mediaStream);
-            videoPlayer.srcObject = mediaStream;
-            videoPlayer.play().catch((error) => {
-                console.error('Erro ao tentar reproduzir o vídeo:', error);
-            });
+    // Ao receber uma oferta do transmissor
+    connection.on('ReceiveOffer', async ({ from, offer }) => {
+        console.log(offer)
+        const response = await fetch("https://webrtcadriano.metered.live/api/v1/turn/credentials?apiKey=02bb2417b9bfdf3ac91c6dedca16b17e17e5");
+        const iceServers = await response.json();
+        const peerConnection =  new RTCPeerConnection({ iceServers: iceServers });
+
+        // Ao receber o stream de vídeo
+        peerConnection.ontrack = (event) => {
+            const track = event.track;
+            if (track.kind === 'video') {
+                const mediaStream = event.streams[0];
+                console.log(mediaStream);
+                videoPlayer.srcObject = mediaStream;
+                videoPlayer.play().catch((error) => {
+                    console.error('Erro ao tentar reproduzir o vídeo:', error);
+                });
+            }
+        };
+
+        // Ao receber um candidato ICE
+        peerConnection.onicecandidate = (event) => {
+
+            if (event.candidate) {
+                console.log("CandidateEvene " + event.candidate)
+                connection.invoke('SendIceCandidate', from, event.candidate);
+                console.log("SendIceCandidateClientId :" + from)
+                console.log("SendIceCandidate :" + JSON.stringify(event.candidate))
+            }
+        };
+
+        // Adicionar a oferta recebida
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        // Enviar a resposta para o transmissor
+        connection.invoke('SendAnswer', from, answer);
+        console.log("SendAnswer" + JSON.stringify(answer));
+    });
+
+    // Adicionar candidatos ICE recebidos
+    connection.on('ReceiveIceCandidate', ({ candidate }) => {
+        if (peerConnection && candidate) {
+            console.lo("ReceiveIceCandidate " + JSON.stringify(candidate))
+            peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         }
-    };
+    });
 
-    // Ao receber um candidato ICE
-    peerConnection.onicecandidate = (event) => {
+}
 
-        if (event.candidate) {
-            const cadidateJson = JSON.stringify(event.candidate)
-            connection.invoke('SendIceCandidate', from, cadidateJson);
-            console.log("SendIceCandidateClientId :" + from)
-            console.log("SendIceCandidate :" + cadidateJson)
-        }
-    };
-
-    // Adicionar a oferta recebida
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offerParse));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    const answerJson = JSON.stringify(peerConnection.localDescription)
-    // Enviar a resposta para o transmissor
-    connection.invoke('SendAnswer', from, answerJson);
-    console.log("SendAnswer" + answerJson);
-});
-
-// Adicionar candidatos ICE recebidos
-connection.on('ReceiveIceCandidate', ({ candidate }) => {
-    const cadidatejson = JSON.parse(candidate)
-    if (peerConnection && cadidatejson) {
-        peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-    }
-});
-
+StartStream()
 // Ao clicar no botão "Capturar"
 addPlayerBtn.addEventListener("click", () => {
     if (ListarCameras.value !== "Selecione uma câmera") {
@@ -116,20 +112,3 @@ addPlayerBtn.addEventListener("click", () => {
         alert("Selecione uma câmera para capturar");
     }
 });
-
-// Função para buscar dados da API
-const ApiGet = async (url, method, token) => {
-    const options = {
-        method: method,
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-        },
-    };
-    try {
-        const response = await fetch(url, options);
-        return await response.json();
-    } catch (ex) {
-        console.error('Erro ao buscar dados:', ex);
-    }
-};

@@ -35,7 +35,7 @@ public class SignalingHub : Hub
     }
 
     // Envia oferta do transmissor para o receptor
-    public async Task SendOffer(string clientId, string offer)
+    public async Task SendOffer(string clientId, object offer)
     {
         Console.WriteLine("Enviar offer para" + clientId);
         await Clients.Clients(clientId).SendAsync("ReceiveOffer", new { From = Context.ConnectionId, Offer = offer });
@@ -43,13 +43,13 @@ public class SignalingHub : Hub
 
 
     // Envia resposta do receptor para o transmissor
-    public async Task SendAnswer(string clientId, string answer)
+    public async Task SendAnswer(string clientId, object answer)
     {
         await Clients.Client(clientId).SendAsync("Answer", new { From = Context.ConnectionId, Answer = answer });
     }
 
     // Reencaminha candidatos ICE
-    public async Task SendIceCandidate(string clientId, string candidate)
+    public async Task SendIceCandidate(string clientId, object candidate)
     {
         await Clients.Client(clientId).SendAsync("IceCandidate", new { From = Context.ConnectionId, Candidate = candidate });
     }

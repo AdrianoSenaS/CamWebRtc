@@ -10,10 +10,10 @@ const Api = async (url, method, data, token)=>{
         body: JSON.stringify(data) 
     };
     try {
-        const response = (await fetch(url, options)).status
-        if(response != "401" && response != "403") {
-           console.log(response)
-        const json = (await fetch(url, options)).json()
+        const response = (await fetch(url, options))
+        if (response.status != "401" && response.status != "403") {
+            console.log(response.status)
+            const json = (await response.json())
         return json;
     }else{
         window.location.href ="/login.html"
@@ -32,10 +32,10 @@ const GetApi = async (url, method, token)=>{
         },
     };
    try{
-       const response = (await fetch(url, options)).status
-       console.log(response)
-       if (response != "401" && response != "403"){
-        const json = (await fetch(url, options)).json()
+       const response = (await fetch(url, options))
+       console.log(response.status)
+       if (response.status != "401" && response.status != "403"){
+           const json = (await response.json())
         return json;
     }else{
         window.location.href ="/login.html"

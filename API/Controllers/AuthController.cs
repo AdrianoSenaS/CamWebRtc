@@ -22,7 +22,7 @@ namespace CamWebRtc.API.Controllers
         {
             if (login.Username == "admin" && login.Password == "senha123")
             {
-                var token = _jwtService.GenerateToken("1", "Admin");
+                var token = _jwtService.GenerateToken("1", "camerasadmim");
                 return Ok(new { Token = token });
             }
 
